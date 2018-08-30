@@ -6,8 +6,11 @@ defmodule BN.IntegerModP do
           modulus: integer()
         }
 
+  @default_modulus 21_888_242_871_839_275_222_246_405_745_257_275_088_696_311_157_297_823_662_689_037_894_645_226_208_583
+
   @spec new(integer(), keyword()) :: t()
-  def new(number, modulus: modulus) do
+  def new(number, params \\ []) do
+    modulus = params[:modulus] || @default_modulus
     value = rem(number, modulus)
 
     %__MODULE__{value: value, modulus: modulus}
@@ -55,11 +58,39 @@ defmodule BN.IntegerModP do
     if number1.modulus != number2.modulus,
       do: raise(ArgumentError, message: "Numbers calculated with different modulus")
 
-    new(round(number1.value / number2.value), modulus: number1.modulus)
+    number1.value
+    |> Kernel./(number2.value)
+    |> round()
+    |> new(modulus: number1.modulus)
   end
 
   def div(_, _) do
     raise ArgumentError,
       message: "#{__MODULE__}.sub/2 can only divide #{__MODULE__} structs"
   end
+
+  @spec pow(t(), t()) :: t()
+  def pow(number1 = %__MODULE__{}, number2) do
+    cond do
+      number2 == 0 ->
+        new(1, modulus: number1.modulus)
+
+      number2 == 1 ->
+        number1
+
+      true ->
+        number1.value
+        |> :crypto.mod_pow(number2, number1.modulus)
+        |> :binary.decode_unsigned()
+        |> new(modulus: number1.modulus)
+    end
+  end
+
+  def pow(_, _) do
+    raise ArgumentError,
+      message: "#{__MODULE__}.pow/2 can only exponent #{__MODULE__} structs"
+  end
+
+  @spec default_modulus() :: integer()
+  def default_modulus, do: @default_modulus
 end
