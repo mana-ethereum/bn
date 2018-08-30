@@ -36,4 +36,17 @@ defmodule BN.IntegerModP.PointTest do
       {:error, "y is bigger than modulus"} = Point.new(x, y, modulus: modulus)
     end
   end
+
+  describe "add/2" do
+    test "adds two points" do
+      {:ok, point1} = Point.new(1, 2, modulus: 5)
+      {:ok, point2} = Point.new(2, 4, modulus: 5)
+
+      result = Point.add(point1, point2)
+
+      assert result.x.value == 3
+      assert result.y.value == 1
+      assert result.modulus == 5
+    end
+  end
 end

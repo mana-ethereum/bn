@@ -33,4 +33,16 @@ defmodule BN.IntegerModP.Point do
         {:ok, point}
     end
   end
+
+  @spec add(t(), t()) :: t()
+  def add(point1, point2) do
+    x = IntegerModP.add(point1.x, point2.x)
+    y = IntegerModP.add(point1.y, point2.y)
+
+    %__MODULE__{
+      x: x,
+      y: y,
+      modulus: x.modulus
+    }
+  end
 end
