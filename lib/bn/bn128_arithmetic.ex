@@ -34,37 +34,45 @@ defmodule BN.BN128Arithmetic do
 
   @spec add_points(Point.t(), Point.t()) :: Point.t()
   defp add_points(point1, point2) do
-    if point1.x == point2.x do
-      {:ok, result} = Point.new(0, 0, modulus: point1.modulus)
+    cond do
+      point1.x == point2.x ->
+        {:ok, result} = Point.new(0, 0, modulus: point1.modulus)
 
-      result
-    else
-      y_remainder = IntegerModP.sub(point2.y, point1.y)
-      x_remainder = IntegerModP.sub(point2.x, point1.x)
-      lambda = IntegerModP.div(y_remainder, x_remainder)
+        result
 
-      x =
-        lambda
-        |> IntegerModP.pow(2)
-        |> IntegerModP.sub(point1.x)
-        |> IntegerModP.sub(point2.x)
+      infinity?(point1) ->
+        point2
 
-      y =
-        point1.x
-        |> IntegerModP.sub(x)
-        |> IntegerModP.mult(lambda)
-        |> IntegerModP.sub(point1.y)
+      infinity?(point2) ->
+        point1
 
-      %Point{
-        x: x,
-        y: y,
-        modulus: point1.modulus
-      }
+      true ->
+        y_remainder = IntegerModP.sub(point2.y, point1.y)
+        x_remainder = IntegerModP.sub(point2.x, point1.x)
+        lambda = IntegerModP.div(y_remainder, x_remainder)
+
+        x =
+          lambda
+          |> IntegerModP.pow(2)
+          |> IntegerModP.sub(point1.x)
+          |> IntegerModP.sub(point2.x)
+
+        y =
+          point1.x
+          |> IntegerModP.sub(x)
+          |> IntegerModP.mult(lambda)
+          |> IntegerModP.sub(point1.y)
+
+        %Point{
+          x: x,
+          y: y,
+          modulus: point1.modulus
+        }
     end
   end
 
   @spec infinity?(Point.t()) :: boolean()
-  defp infinity?(point) do
+  def infinity?(point) do
     point.x.value == 0 && point.y.value == 0
   end
 end
