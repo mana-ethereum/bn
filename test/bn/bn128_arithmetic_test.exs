@@ -16,9 +16,14 @@ defmodule BN.BN128ArithmeticTest do
 
       assert BN128Arithmetic.on_curve?(point)
     end
+
+    test "returns true if the point is infinity" do
+      {:ok, point} = Point.new(0, 0)
+
+      assert BN128Arithmetic.on_curve?(point)
+    end
   end
 
-  @tag timeout: 100_000_000
   describe "add_points/2" do
     test "fails when point1 is not on the curve" do
       {:ok, point1} = Point.new(10, 11)

@@ -6,12 +6,16 @@ defmodule BN.BN128Arithmetic do
 
   @spec on_curve?(Point.t(), IntegerModP.t()) :: boolean()
   def on_curve?(point, b \\ @default_b) do
-    minuend = IntegerModP.pow(point.y, 2)
-    subtrahend = IntegerModP.pow(point.x, 3)
+    if infinity?(point) do
+      true
+    else
+      minuend = IntegerModP.pow(point.y, 2)
+      subtrahend = IntegerModP.pow(point.x, 3)
 
-    remainder = IntegerModP.sub(minuend, subtrahend)
+      remainder = IntegerModP.sub(minuend, subtrahend)
 
-    remainder == b
+      remainder == b
+    end
   end
 
   @spec add(Point.t(), Point.t()) :: {:ok, Point.t()} | {:error, String.t()}
@@ -57,5 +61,10 @@ defmodule BN.BN128Arithmetic do
         modulus: point1.modulus
       }
     end
+  end
+
+  @spec infinity?(Point.t()) :: boolean()
+  defp infinity?(point) do
+    point.x.value == 0 && point.y.value == 0
   end
 end
