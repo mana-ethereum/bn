@@ -8,6 +8,8 @@ defmodule BN.IntegerModP do
 
   @default_modulus 21_888_242_871_839_275_222_246_405_745_257_275_088_696_311_157_297_823_662_689_037_894_645_226_208_583
 
+  alias BN.IntegerModP.ExtendedEuclideanAlgorithm
+
   @spec new(integer(), keyword()) :: t()
   def new(number, params \\ []) do
     modulus = params[:modulus] || @default_modulus
@@ -66,10 +68,9 @@ defmodule BN.IntegerModP do
     if number1.modulus != number2.modulus,
       do: raise(ArgumentError, message: "Numbers calculated with different modulus")
 
-    number1.value
-    |> Kernel./(number2.value)
-    |> round()
-    |> new(modulus: number1.modulus)
+    {1, inverse} = ExtendedEuclideanAlgorithm.extended_gcd(number2.value, number2.modulus)
+
+    mult(number1, inverse)
   end
 
   def div(_, _) do

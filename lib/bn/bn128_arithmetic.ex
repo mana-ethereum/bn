@@ -64,9 +64,9 @@ defmodule BN.BN128Arithmetic do
         |> IntegerModP.mult(3)
         |> IntegerModP.div(double_y)
 
-      double_x = IntegerModP.mult(point.x, 2) |> IO.inspect()
+      double_x = IntegerModP.mult(point.x, 2)
 
-      x = lambda |> IntegerModP.pow(2) |> IntegerModP.sub(double_x) |> IO.inspect()
+      x = lambda |> IntegerModP.pow(2) |> IntegerModP.sub(double_x)
 
       y =
         point.x
