@@ -38,5 +38,14 @@ defmodule BN.BN128ArithmeticTest do
 
       {:error, "point2 is not on the curve"} = BN128Arithmetic.add(point1, point2)
     end
+
+    test "returns another number when one of the number is infinity" do
+      {:ok, point1} = Point.new(1, 2)
+      {:ok, point2} = Point.new(0, 0)
+
+      {:ok, result} = BN128Arithmetic.add(point1, point2)
+
+      assert result == point1
+    end
   end
 end

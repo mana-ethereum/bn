@@ -22,6 +22,13 @@ defmodule BN.IntegerModPTest do
       assert integer.modulus ==
                21_888_242_871_839_275_222_246_405_745_257_275_088_696_311_157_297_823_662_689_037_894_645_226_208_583
     end
+
+    test "always returns postive number" do
+      integer = IntegerModP.new(-12, modulus: 5)
+
+      assert integer.value == 3
+      assert integer.modulus == 5
+    end
   end
 
   describe "add/2" do
@@ -92,6 +99,16 @@ defmodule BN.IntegerModPTest do
       result = IntegerModP.mult(integer1, integer2)
 
       assert result.value == 4
+      assert result.modulus == 8
+    end
+
+    test "calculates (a * b) mod p when b is a simple integer" do
+      integer1 = IntegerModP.new(17, modulus: 8)
+      integer2 = 2
+
+      result = IntegerModP.mult(integer1, integer2)
+
+      assert result.value == 2
       assert result.modulus == 8
     end
 

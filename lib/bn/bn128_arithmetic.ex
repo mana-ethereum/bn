@@ -35,10 +35,8 @@ defmodule BN.BN128Arithmetic do
   @spec add_points(Point.t(), Point.t()) :: Point.t()
   defp add_points(point1, point2) do
     cond do
-      point1.x == point2.x ->
-        {:ok, result} = Point.new(0, 0, modulus: point1.modulus)
-
-        result
+      point1 == point2 ->
+        double(point1)
 
       infinity?(point1) ->
         point2
@@ -47,27 +45,71 @@ defmodule BN.BN128Arithmetic do
         point1
 
       true ->
-        y_remainder = IntegerModP.sub(point2.y, point1.y)
-        x_remainder = IntegerModP.sub(point2.x, point1.x)
-        lambda = IntegerModP.div(y_remainder, x_remainder)
+        calculate_points_addition(point1, point2)
+    end
+  end
 
-        x =
-          lambda
-          |> IntegerModP.pow(2)
-          |> IntegerModP.sub(point1.x)
-          |> IntegerModP.sub(point2.x)
+  @spec double(Point.t()) :: Point.t()
+  defp double(point) do
+    if point.y.value == 0 do
+      {:ok, result} = Point.new(0, 0, modulus: point.modulus)
 
-        y =
-          point1.x
-          |> IntegerModP.sub(x)
-          |> IntegerModP.mult(lambda)
-          |> IntegerModP.sub(point1.y)
+      result
+    else
+      double_y = IntegerModP.mult(point.y, 2)
 
-        %Point{
-          x: x,
-          y: y,
-          modulus: point1.modulus
-        }
+      lambda =
+        point.x
+        |> IntegerModP.pow(2)
+        |> IntegerModP.mult(3)
+        |> IntegerModP.div(double_y)
+
+      double_x = IntegerModP.mult(point.x, 2) |> IO.inspect()
+
+      x = lambda |> IntegerModP.pow(2) |> IntegerModP.sub(double_x) |> IO.inspect()
+
+      y =
+        point.x
+        |> IntegerModP.sub(x)
+        |> IntegerModP.mult(lambda)
+        |> IntegerModP.sub(point.y)
+
+      %Point{
+        x: x,
+        y: y,
+        modulus: point.modulus
+      }
+    end
+  end
+
+  @spec calculate_points_addition(Point.t(), Point.t()) :: Point.t()
+  defp calculate_points_addition(point1, point2) do
+    if point1.x == point2.x do
+      {:ok, result} = Point.new(0, 0, modulus: point1.modulus)
+
+      result
+    else
+      y_remainder = IntegerModP.sub(point2.y, point1.y)
+      x_remainder = IntegerModP.sub(point2.x, point1.x)
+      lambda = IntegerModP.div(y_remainder, x_remainder)
+
+      x =
+        lambda
+        |> IntegerModP.pow(2)
+        |> IntegerModP.sub(point1.x)
+        |> IntegerModP.sub(point2.x)
+
+      y =
+        point1.x
+        |> IntegerModP.sub(x)
+        |> IntegerModP.mult(lambda)
+        |> IntegerModP.sub(point1.y)
+
+      %Point{
+        x: x,
+        y: y,
+        modulus: point1.modulus
+      }
     end
   end
 

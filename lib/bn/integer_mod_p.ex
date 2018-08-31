@@ -11,7 +11,11 @@ defmodule BN.IntegerModP do
   @spec new(integer(), keyword()) :: t()
   def new(number, params \\ []) do
     modulus = params[:modulus] || @default_modulus
-    value = rem(number, modulus)
+
+    value =
+      number
+      |> rem(modulus)
+      |> make_positive(modulus)
 
     %__MODULE__{value: value, modulus: modulus}
   end
@@ -40,12 +44,16 @@ defmodule BN.IntegerModP do
     raise ArgumentError, message: "#{__MODULE__}.sub/2 can only substract #{__MODULE__} structs"
   end
 
-  @spec mult(t(), t()) :: t()
+  @spec mult(t(), t() | integer()) :: t()
   def mult(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
     if number1.modulus != number2.modulus,
       do: raise(ArgumentError, message: "Numbers calculated with different modulus")
 
     new(number1.value * number2.value, modulus: number1.modulus)
+  end
+
+  def mult(number1 = %__MODULE__{}, number2) do
+    new(number1.value * number2, modulus: number1.modulus)
   end
 
   def mult(_, _) do
@@ -93,4 +101,13 @@ defmodule BN.IntegerModP do
 
   @spec default_modulus() :: integer()
   def default_modulus, do: @default_modulus
+
+  @spec make_positive(integer(), integer()) :: integer()
+  defp make_positive(number, _) when number >= 0, do: number
+
+  defp make_positive(number, modulus) do
+    updated_number = number + modulus
+
+    make_positive(updated_number, modulus)
+  end
 end
