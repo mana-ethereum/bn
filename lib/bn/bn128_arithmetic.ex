@@ -18,7 +18,7 @@ defmodule BN.BN128Arithmetic do
     end
   end
 
-  @spec add(Point.t(), Point.t()) :: {:ok, Point.t()} | {:error, String.t()}
+  @spec add(Point.t(), Point.t(), integer()) :: {:ok, Point.t()} | {:error, String.t()}
   def add(point1, point2, b \\ @default_b) do
     cond do
       !on_curve?(point1, b) ->
@@ -29,6 +29,38 @@ defmodule BN.BN128Arithmetic do
 
       true ->
         {:ok, add_points(point1, point2)}
+    end
+  end
+
+  @spec mult(Point.t(), integer(), integer()) :: {:ok, Point.t()} | {:error, String.t()}
+  def mult(point, scalar, b \\ @default_b) do
+    if !on_curve?(point, b) do
+      {:error, "point1 is not on the curve"}
+    else
+      {:ok, mult_point(point, scalar)}
+    end
+  end
+
+  @spec mult_point(Point.t(), integer()) :: Point.t()
+  defp mult_point(point, scalar) do
+    cond do
+      scalar == 0 ->
+        {:ok, result} = Point.new(0, 0, modulus: point.modulus)
+
+        result
+
+      scalar == 1 ->
+        point
+
+      div(scalar, 2) == 1 ->
+        point
+        |> mult_point(scalar - 1)
+        |> add_points(point)
+
+      true ->
+        point
+        |> double()
+        |> mult_point(round(scalar / 2))
     end
   end
 
