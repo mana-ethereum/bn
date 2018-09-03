@@ -23,10 +23,12 @@ defmodule BN.IntegerModP do
   end
 
   @spec add(t(), t()) :: t()
-  def add(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
-    if number1.modulus != number2.modulus,
-      do: raise(ArgumentError, message: "Numbers calculated with different modulus")
+  def add(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
+      when modulus1 != modulus2 do
+    raise(ArgumentError, message: "Numbers calculated with different modulus")
+  end
 
+  def add(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
     new(number1.value + number2.value, modulus: number1.modulus)
   end
 
@@ -35,10 +37,12 @@ defmodule BN.IntegerModP do
   end
 
   @spec sub(t(), t()) :: t()
-  def sub(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
-    if number1.modulus != number2.modulus,
-      do: raise(ArgumentError, message: "Numbers calculated with different modulus")
+  def sub(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
+      when modulus1 != modulus2 do
+    raise(ArgumentError, message: "Numbers calculated with different modulus")
+  end
 
+  def sub(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
     new(number1.value - number2.value, modulus: number1.modulus)
   end
 
@@ -47,10 +51,12 @@ defmodule BN.IntegerModP do
   end
 
   @spec mult(t(), t() | integer()) :: t()
-  def mult(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
-    if number1.modulus != number2.modulus,
-      do: raise(ArgumentError, message: "Numbers calculated with different modulus")
+  def mult(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
+      when modulus1 != modulus2 do
+    raise(ArgumentError, message: "Numbers calculated with different modulus")
+  end
 
+  def mult(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
     new(number1.value * number2.value, modulus: number1.modulus)
   end
 
@@ -64,10 +70,12 @@ defmodule BN.IntegerModP do
   end
 
   @spec div(t(), t()) :: t()
-  def div(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
-    if number1.modulus != number2.modulus,
-      do: raise(ArgumentError, message: "Numbers calculated with different modulus")
+  def div(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
+      when modulus1 != modulus2 do
+    raise(ArgumentError, message: "Numbers calculated with different modulus")
+  end
 
+  def div(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
     {1, inverse} = ExtendedEuclideanAlgorithm.extended_gcd(number2.value, number2.modulus)
 
     mult(number1, inverse)
@@ -79,19 +87,19 @@ defmodule BN.IntegerModP do
   end
 
   @spec pow(t(), t()) :: t()
-  def pow(number1 = %__MODULE__{}, number2) do
-    cond do
-      number2 == 0 ->
-        new(1, modulus: number1.modulus)
+  def pow(base = %__MODULE__{}, exponent) do
+    case exponent do
+      0 ->
+        new(1, modulus: base.modulus)
 
-      number2 == 1 ->
-        number1
+      1 ->
+        base
 
-      true ->
-        number1.value
-        |> :crypto.mod_pow(number2, number1.modulus)
+      _ ->
+        base.value
+        |> :crypto.mod_pow(exponent, base.modulus)
         |> :binary.decode_unsigned()
-        |> new(modulus: number1.modulus)
+        |> new(modulus: base.modulus)
     end
   end
 

@@ -1,7 +1,11 @@
 defmodule BN.BN128Arithmetic do
+  require Integer
   alias BN.IntegerModP
   alias BN.IntegerModP.Point
 
+  # y^2 = x^3 + 3
+  @y_power 2
+  @x_power 3
   @default_b IntegerModP.new(3)
 
   @spec on_curve?(Point.t(), IntegerModP.t()) :: boolean()
@@ -9,8 +13,8 @@ defmodule BN.BN128Arithmetic do
     if infinity?(point) do
       true
     else
-      minuend = IntegerModP.pow(point.y, 2)
-      subtrahend = IntegerModP.pow(point.x, 3)
+      minuend = IntegerModP.pow(point.y, @y_power)
+      subtrahend = IntegerModP.pow(point.x, @x_power)
 
       remainder = IntegerModP.sub(minuend, subtrahend)
 
@@ -35,7 +39,7 @@ defmodule BN.BN128Arithmetic do
   @spec mult(Point.t(), integer(), integer()) :: {:ok, Point.t()} | {:error, String.t()}
   def mult(point, scalar, b \\ @default_b) do
     if !on_curve?(point, b) do
-      {:error, "point1 is not on the curve"}
+      {:error, "point is not on the curve"}
     else
       {:ok, mult_point(point, scalar)}
     end
@@ -52,7 +56,7 @@ defmodule BN.BN128Arithmetic do
       scalar == 1 ->
         point
 
-      rem(scalar, 2) == 0 ->
+      Integer.is_even(scalar) ->
         point
         |> mult_point(div(scalar, 2))
         |> double()
