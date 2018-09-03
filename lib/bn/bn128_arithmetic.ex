@@ -52,15 +52,16 @@ defmodule BN.BN128Arithmetic do
       scalar == 1 ->
         point
 
-      div(scalar, 2) == 1 ->
+      rem(scalar, 2) == 0 ->
         point
-        |> mult_point(scalar - 1)
-        |> add_points(point)
+        |> mult_point(div(scalar, 2))
+        |> double()
 
       true ->
         point
+        |> mult_point(div(scalar, 2))
         |> double()
-        |> mult_point(round(scalar / 2))
+        |> calculate_points_addition(point)
     end
   end
 
