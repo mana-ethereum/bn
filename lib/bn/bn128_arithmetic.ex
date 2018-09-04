@@ -38,10 +38,10 @@ defmodule BN.BN128Arithmetic do
 
   @spec mult(Point.t(), integer(), integer()) :: {:ok, Point.t()} | {:error, String.t()}
   def mult(point, scalar, b \\ @default_b) do
-    if !on_curve?(point, b) do
-      {:error, "point is not on the curve"}
-    else
+    if on_curve?(point, b) do
       {:ok, mult_point(point, scalar)}
+    else
+      {:error, "point is not on the curve"}
     end
   end
 

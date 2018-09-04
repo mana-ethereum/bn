@@ -1,2 +1,2 @@
-defmodule Bn do
+defmodule BN do
 end
