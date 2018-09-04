@@ -1,4 +1,4 @@
-# Bn
+# BN [![CircleCI](https://circleci.com/gh/poanetwork/bn.svg?style=svg)](https://circleci.com/gh/poanetwork/bn)
 
 BN128 elliptic curve operations for Elixir
 
