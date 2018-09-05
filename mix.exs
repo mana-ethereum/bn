@@ -25,6 +25,7 @@ defmodule Bn.MixProject do
 
   defp deps do
     [
+      {:tensor, "~> 2.1.0"},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
     ]

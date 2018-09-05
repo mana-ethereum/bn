@@ -1,6 +1,7 @@
 defmodule BN.IntegerModP.Point do
   defstruct [:x, :y, :modulus]
 
+  alias BN.IntegerModP.Point12
   alias BN.IntegerModP
 
   @type t :: %__MODULE__{
