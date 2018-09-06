@@ -49,8 +49,6 @@ defmodule BN.FQ do
   end
 
   def sub(n1, n2) do
-    IO.inspect(n1)
-    IO.inspect(n2)
     raise ArgumentError, message: "#{__MODULE__}.sub/2 can only substract #{__MODULE__} structs"
   end
 

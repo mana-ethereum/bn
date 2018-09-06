@@ -142,6 +142,7 @@ defmodule BN.FQP do
     r = r ++ List.duplicate(FQ.new(0), fqp.dim + 1 - Enum.count(r))
 
     nm = hm
+
     new = high
 
     {nm, new} =
@@ -162,15 +163,16 @@ defmodule BN.FQP do
       end)
 
     deg_low = deg(new)
+
     calculate_inverse({low, new}, {lm, nm}, fqp, deg_low)
   end
 
   defp calculate_inverse({_, low}, {_, lm}, fqp, _) do
     coef =
-      low
+      lm
       |> Enum.take(fqp.dim)
       |> Enum.map(fn el ->
-        FQ.divide(el, Enum.at(lm, 0))
+        FQ.divide(el, Enum.at(low, 0))
       end)
 
     new(coef, fqp.modulus_coef)
@@ -181,36 +183,44 @@ defmodule BN.FQP do
     degb = deg(b)
     temp = a
 
-    out = List.duplicate(FQ.new(0), Enum.count(a))
+    output = List.duplicate(FQ.new(0), Enum.count(a))
 
-    {output, _} =
-      0..(dega - degb)
-      |> Enum.to_list()
-      |> Enum.reverse()
-      |> Enum.reduce({out, temp}, fn i, {out_acc, temp_acc} ->
-        new_val =
-          temp_acc
-          |> Enum.at(degb + i)
-          |> FQ.new()
-          |> FQ.divide(Enum.at(b, degb))
-          |> FQ.add(Enum.at(out_acc, i))
+    output =
+      if dega - degb >= 0 do
+        {output, _} =
+          0..(dega - degb)
+          |> Enum.to_list()
+          |> Enum.reverse()
+          |> Enum.reduce({output, temp}, fn i, {out_acc, temp_acc} ->
+            new_val =
+              temp_acc
+              |> Enum.at(degb + i)
+              |> FQ.new()
+              |> FQ.divide(Enum.at(b, degb))
+              |> FQ.add(Enum.at(out_acc, i))
 
-        new_out_acc = List.replace_at(out_acc, i, new_val)
+            new_out_acc = List.replace_at(out_acc, i, new_val)
 
-        new_temp_acc =
-          0..degb
-          |> Enum.reduce(temp_acc, fn j, acc ->
-            updated_value = acc |> Enum.at(i + j) |> FQ.new() |> FQ.sub(Enum.at(out, j))
+            new_temp_acc =
+              0..degb
+              |> Enum.reduce(temp_acc, fn j, acc ->
+                updated_value =
+                  acc |> Enum.at(i + j) |> FQ.new() |> FQ.sub(Enum.at(new_out_acc, j))
 
-            List.replace_at(
-              acc,
-              i + j,
-              updated_value
-            )
+                List.replace_at(
+                  acc,
+                  i + j,
+                  updated_value
+                )
+              end)
+
+            {new_out_acc, new_temp_acc}
           end)
 
-        {new_out_acc, new_temp_acc}
-      end)
+        output
+      else
+        output
+      end
 
     dego = deg(output)
 
@@ -229,7 +239,7 @@ defmodule BN.FQP do
         end
       end)
 
-    if is_nil(idx), do: Enum.count(list) - 1, else: Enum.count(list) - idx - 1
+    if is_nil(idx), do: 0, else: Enum.count(list) - idx - 1
   end
 
   defp mult_modulus_coef(pol_coef = [cur | tail_pol_coef], modulus_coef, dim)
