@@ -115,6 +115,51 @@ defmodule BN.FQP do
 
   def mult(_, _), do: raise(ArgumentError, message: "Can't multiply elements of different fields")
 
+  def reverse(fqp) do
+  end
+
+  defp poly_rounded_div(a, b) do
+    dega = deg(a)
+    degb = deg(b)
+    temp = a
+
+    out = List.duplicate(FQ.new(0), Enum.count(a))
+
+    {output, _} =
+      0..(dega - geb - 1)
+      |> Enum.to_list()
+      |> Enum.reverse()
+      |> Enum.reduce({out, temp}, fn i ->
+        new_val =
+          temp
+          |> Enum.at(degb + i)
+          |> FQ.div(Enum.at(b, degb))
+          |> FQ.add(Enum.at(output, i))
+
+        out = List.replace_at(output, i, new_val)
+
+        temp =
+          0..degb
+          |> Enum.reduce(temp, fn j, acc ->
+            List.replace_at(acc, i + j, FQ.sub(Enum.at(acc, i + j), Enum.at(output, j)))
+          end)
+
+        {out, temp}
+      end)
+
+    dego = deg(output)
+    Enum.take(list, dego + 1)
+  end
+
+  defp deg(list) do
+    idx =
+      Enum.find_index(list, fn el ->
+        el.value != 0
+      end)
+
+    if is_nil(idx), do: Enum.count(list) - 1, else: Enum.count(list) - idx - 1
+  end
+
   defp mult_modulus_coef(pol_coef = [cur | tail_pol_coef], modulus_coef, dim)
        when length(pol_coef) > dim do
     current_idx = Enum.count(pol_coef) - dim - 1
