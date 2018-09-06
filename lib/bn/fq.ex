@@ -10,7 +10,9 @@ defmodule BN.FQ do
 
   alias BN.IntegerModP.ExtendedEuclideanAlgorithm
 
-  @spec new(integer(), keyword()) :: t()
+  @spec new(integer() | t(), keyword()) :: t()
+  def new(number = %__MODULE__{}, _), do: number
+
   def new(number, params \\ []) do
     modulus = params[:modulus] || @default_modulus
 
@@ -46,7 +48,9 @@ defmodule BN.FQ do
     new(number1.value - number2.value, modulus: number1.modulus)
   end
 
-  def sub(_, _) do
+  def sub(n1, n2) do
+    IO.inspect(n1)
+    IO.inspect(n2)
     raise ArgumentError, message: "#{__MODULE__}.sub/2 can only substract #{__MODULE__} structs"
   end
 
@@ -69,21 +73,33 @@ defmodule BN.FQ do
       message: "#{__MODULE__}.sub/2 can only multiplicate #{__MODULE__} structs"
   end
 
-  @spec div(t(), t()) :: t()
-  def div(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
+  @spec divide(t(), t()) :: t()
+  def divide(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
       when modulus1 != modulus2 do
     raise(ArgumentError, message: "Numbers calculated with different modulus")
   end
 
-  def div(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
-    {1, inverse} = ExtendedEuclideanAlgorithm.extended_gcd(number2.value, number2.modulus)
+  def divide(number1 = %__MODULE__{}, number2 = %__MODULE__{}) do
+    divide(number1, number2.value)
+  end
+
+  def divide(number1 = %__MODULE__{}, number2) when is_integer(number2) do
+    {1, inverse} = ExtendedEuclideanAlgorithm.extended_gcd(number2, number1.modulus)
 
     mult(number1, inverse)
   end
 
-  def div(_, _) do
+  def divide(number1, number2) when is_integer(number2) and is_integer(number1) do
+    {1, inverse} = ExtendedEuclideanAlgorithm.extended_gcd(number2, default_modulus)
+
+    number1
+    |> new()
+    |> mult(inverse)
+  end
+
+  def divide(num, num1) do
     raise ArgumentError,
-      message: "#{__MODULE__}.sub/2 can only divide #{__MODULE__} structs"
+      message: "#{__MODULE__}.div/2 can only divide #{__MODULE__} structs"
   end
 
   @spec pow(t(), t()) :: t()

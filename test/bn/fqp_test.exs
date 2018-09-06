@@ -157,4 +157,18 @@ defmodule BN.FQPTest do
       assert result1 == result2
     end
   end
+
+  describe "div/2" do
+    test "divides two fq12 elements" do
+      modulus_coef = [82, 0, 0, 0, 0, 0, -18, 0, 0, 0, 0, 0]
+
+      coef1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      fpq1 = FQP.new(coef1, modulus_coef)
+
+      coef2 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      fpq2 = FQP.new(coef2, modulus_coef)
+
+      res = FQP.inverse(fpq1) |> IO.inspect()
+    end
+  end
 end

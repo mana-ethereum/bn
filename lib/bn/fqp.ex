@@ -19,6 +19,11 @@ defmodule BN.FQP do
         FQ.new(coef_el, modulus: modulus)
       end)
 
+    mudulus_coef =
+      Enum.map(modulus_coef, fn coef_el ->
+        FQ.new(coef_el, modulus: modulus)
+      end)
+
     %__MODULE__{
       coef: fq_coef,
       modulus_coef: modulus_coef,
@@ -115,7 +120,60 @@ defmodule BN.FQP do
 
   def mult(_, _), do: raise(ArgumentError, message: "Can't multiply elements of different fields")
 
-  def reverse(fqp) do
+  def div(fqp1, fqp2) do
+    inverse = inverse(fqp2)
+
+    mult(fqp1, inverse)
+  end
+
+  def inverse(fqp) do
+    lm = [FQ.new(1)] ++ List.duplicate(FQ.new(0), fqp.dim)
+    hm = List.duplicate(FQ.new(0), fqp.dim + 1)
+    low = fqp.coef ++ [FQ.new(0)]
+    high = fqp.modulus_coef ++ [1]
+
+    deg_low = deg(low)
+
+    calculate_inverse({high, low}, {hm, lm}, fqp, deg_low)
+  end
+
+  defp calculate_inverse({high, low}, {hm, lm}, fqp, deg_low) when deg_low != 0 do
+    r = poly_rounded_div(high, low)
+    r = r ++ List.duplicate(FQ.new(0), fqp.dim + 1 - Enum.count(r))
+
+    nm = hm
+    new = high
+
+    {nm, new} =
+      0..fqp.dim
+      |> Enum.reduce({nm, new}, fn i, {nm, new} ->
+        0..(fqp.dim - i)
+        |> Enum.reduce({nm, new}, fn j, {nm, new} ->
+          nmmult = lm |> Enum.at(i) |> FQ.new() |> FQ.mult(Enum.at(r, j))
+          new_nm_val = nm |> Enum.at(i + j) |> FQ.new() |> FQ.sub(nmmult)
+          nm = List.replace_at(nm, i + j, new_nm_val)
+
+          newmult = low |> Enum.at(i) |> FQ.new() |> FQ.mult(Enum.at(r, j))
+          new_val = new |> Enum.at(i + j) |> FQ.new() |> FQ.sub(newmult)
+          new = List.replace_at(new, i + j, new_val)
+
+          {nm, new}
+        end)
+      end)
+
+    deg_low = deg(new)
+    calculate_inverse({low, new}, {lm, nm}, fqp, deg_low)
+  end
+
+  defp calculate_inverse({_, low}, {_, lm}, fqp, _) do
+    coef =
+      low
+      |> Enum.take(fqp.dim)
+      |> Enum.map(fn el ->
+        FQ.divide(el, Enum.at(lm, 0))
+      end)
+
+    new(coef, fqp.modulus_coef)
   end
 
   defp poly_rounded_div(a, b) do
@@ -126,35 +184,49 @@ defmodule BN.FQP do
     out = List.duplicate(FQ.new(0), Enum.count(a))
 
     {output, _} =
-      0..(dega - geb - 1)
+      0..(dega - degb)
       |> Enum.to_list()
       |> Enum.reverse()
-      |> Enum.reduce({out, temp}, fn i ->
+      |> Enum.reduce({out, temp}, fn i, {out_acc, temp_acc} ->
         new_val =
-          temp
+          temp_acc
           |> Enum.at(degb + i)
-          |> FQ.div(Enum.at(b, degb))
-          |> FQ.add(Enum.at(output, i))
+          |> FQ.new()
+          |> FQ.divide(Enum.at(b, degb))
+          |> FQ.add(Enum.at(out_acc, i))
 
-        out = List.replace_at(output, i, new_val)
+        new_out_acc = List.replace_at(out_acc, i, new_val)
 
-        temp =
+        new_temp_acc =
           0..degb
-          |> Enum.reduce(temp, fn j, acc ->
-            List.replace_at(acc, i + j, FQ.sub(Enum.at(acc, i + j), Enum.at(output, j)))
+          |> Enum.reduce(temp_acc, fn j, acc ->
+            updated_value = acc |> Enum.at(i + j) |> FQ.new() |> FQ.sub(Enum.at(out, j))
+
+            List.replace_at(
+              acc,
+              i + j,
+              updated_value
+            )
           end)
 
-        {out, temp}
+        {new_out_acc, new_temp_acc}
       end)
 
     dego = deg(output)
-    Enum.take(list, dego + 1)
+
+    Enum.take(output, dego + 1)
   end
 
   defp deg(list) do
     idx =
-      Enum.find_index(list, fn el ->
-        el.value != 0
+      list
+      |> Enum.reverse()
+      |> Enum.find_index(fn el ->
+        if is_integer(el) do
+          el != 0
+        else
+          el.value != 0
+        end
       end)
 
     if is_nil(idx), do: Enum.count(list) - 1, else: Enum.count(list) - idx - 1
