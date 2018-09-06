@@ -17,8 +17,7 @@ defmodule BN.FQ do
     value =
       number
       |> rem(modulus)
-
-    # |> make_positive(modulus)
+      |> make_positive(modulus)
 
     %__MODULE__{value: value, modulus: modulus}
   end

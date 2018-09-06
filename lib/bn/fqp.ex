@@ -113,20 +113,25 @@ defmodule BN.FQP do
     %__MODULE__{modulus_coef: modulus_coef1, dim: dim1, coef: coef}
   end
 
+  def mult(_, _), do: raise(ArgumentError, message: "Can't multiply elements of different fields")
+
   defp mult_modulus_coef(pol_coef = [cur | tail_pol_coef], modulus_coef, dim)
        when length(pol_coef) > dim do
     current_idx = Enum.count(pol_coef) - dim - 1
+    tail_pol_coef = Enum.reverse(tail_pol_coef)
 
     cur_result =
       Enum.reduce(0..(dim - 1), tail_pol_coef, fn i, acc ->
-        current_acc_el = Enum.at(acc, i + current_idx)
+        current_acc_el = acc |> Enum.at(i + current_idx)
         subtrahend = modulus_coef |> Enum.at(i) |> FQ.new() |> FQ.mult(cur)
         updated_acc_el = FQ.sub(current_acc_el, subtrahend)
 
         List.replace_at(acc, current_idx + i, updated_acc_el)
       end)
 
-    mult_modulus_coef(cur_result, modulus_coef, dim)
+    cur_result
+    |> Enum.reverse()
+    |> mult_modulus_coef(modulus_coef, dim)
   end
 
   defp mult_modulus_coef(pol_coef, _, _), do: Enum.reverse(pol_coef)
