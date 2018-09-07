@@ -11,6 +11,20 @@ defmodule BN.FQ12 do
     FQP.new(coef, @modulus_coef)
   end
 
+  @spec one() :: FQP.t()
+  def one do
+    coef = [1] ++ List.duplicate(0, 12)
+
+    new(coef)
+  end
+
+  @spec zero() :: FQP.t()
+  def zero do
+    coef = List.duplicate(0, 12)
+
+    new(coef)
+  end
+
   defdelegate add(fq12_1, fq12_2), to: FQP
   defdelegate sub(fq12_1, fq12_2), to: FQP
   defdelegate mult(fq12_1, fq12_2), to: FQP

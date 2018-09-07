@@ -11,9 +11,11 @@ defmodule BN.FQ do
   alias BN.FQ.ExtendedEuclideanAlgorithm
 
   @spec new(integer() | t(), keyword()) :: t()
+  def new(number, params \\ [])
+
   def new(number = %__MODULE__{}, _), do: number
 
-  def new(number, params \\ []) do
+  def new(number, params) do
     modulus = params[:modulus] || @default_modulus
 
     value =
@@ -22,6 +24,16 @@ defmodule BN.FQ do
       |> make_positive(modulus)
 
     %__MODULE__{value: value, modulus: modulus}
+  end
+
+  @spec one() :: t()
+  def one do
+    new(1)
+  end
+
+  @spec zero() :: t()
+  def zero do
+    new(0)
   end
 
   @spec add(t(), t()) :: t()
@@ -48,7 +60,7 @@ defmodule BN.FQ do
     new(number1.value - number2.value, modulus: number1.modulus)
   end
 
-  def sub(n1, n2) do
+  def sub(_, _) do
     raise ArgumentError, message: "#{__MODULE__}.sub/2 can only substract #{__MODULE__} structs"
   end
 
@@ -88,14 +100,14 @@ defmodule BN.FQ do
   end
 
   def divide(number1, number2) when is_integer(number2) and is_integer(number1) do
-    {1, inverse} = ExtendedEuclideanAlgorithm.extended_gcd(number2, default_modulus)
+    {1, inverse} = ExtendedEuclideanAlgorithm.extended_gcd(number2, default_modulus())
 
     number1
     |> new()
     |> mult(inverse)
   end
 
-  def divide(num, num1) do
+  def divide(_, _) do
     raise ArgumentError,
       message: "#{__MODULE__}.div/2 can only divide #{__MODULE__} structs"
   end

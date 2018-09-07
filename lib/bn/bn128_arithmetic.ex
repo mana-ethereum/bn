@@ -65,11 +65,14 @@ defmodule BN.BN128Arithmetic do
     end
   end
 
-  @spec mult_point(point(), integer()) :: Point.t()
+  @spec mult_point(point(), integer()) :: point()
   defp mult_point(point, scalar) do
     cond do
       scalar == 0 ->
-        {FQ.new(0), FQ.new(0)}
+        case point do
+          %FQ{} -> {FQ.new(0), FQ.new(0)}
+          _ -> {FQ12.zero(), FQ12.zero()}
+        end
 
       scalar == 1 ->
         point
@@ -88,7 +91,7 @@ defmodule BN.BN128Arithmetic do
   end
 
   @spec add_points(point(), point()) :: point()
-  defp add_points(point1, point2) do
+  def add_points(point1, point2) do
     cond do
       point1 == point2 ->
         double(point1)
@@ -105,7 +108,7 @@ defmodule BN.BN128Arithmetic do
   end
 
   @spec double(point()) :: point()
-  defp double({x, y}) do
+  def double({x, y} = {%FQ{}, %FQ{}}) do
     if y.value == 0 do
       {FQ.new(0), FQ.new(0)}
     else
@@ -131,8 +134,34 @@ defmodule BN.BN128Arithmetic do
     end
   end
 
-  @spec calculate_points_addition(Point.t(), Point.t()) :: Point.t()
-  defp calculate_points_addition({x1, y1}, {x2, y2}) do
+  def double({x, y} = {%FQP{}, %FQP{}}) do
+    if y == FQ12.zero() do
+      {FQ12.zero(), FQ12.zero()}
+    else
+      double_y = FQ12.mult(y, 2)
+
+      lambda =
+        x
+        |> FQ12.pow(2)
+        |> FQ12.mult(3)
+        |> FQ12.divide(double_y)
+
+      double_x = FQ12.mult(x, 2)
+
+      new_x = lambda |> FQ12.pow(2) |> FQ12.sub(double_x)
+
+      new_y =
+        x
+        |> FQ12.sub(new_x)
+        |> FQ12.mult(lambda)
+        |> FQ12.sub(y)
+
+      {new_x, new_y}
+    end
+  end
+
+  @spec calculate_points_addition(point(), point()) :: point()
+  defp calculate_points_addition({x1, y1} = {%FQ{}, %FQ{}}, {x2, y2}) do
     if x1 == x2 do
       {FQ.new(0), FQ.new(0)}
     else
@@ -151,6 +180,30 @@ defmodule BN.BN128Arithmetic do
         |> FQ.sub(x)
         |> FQ.mult(lambda)
         |> FQ.sub(y1)
+
+      {x, y}
+    end
+  end
+
+  defp calculate_points_addition({x1, y1} = {%FQP{}, %FQP{}}, {x2, y2}) do
+    if x1 == x2 do
+      {FQ12.zero(), FQ12.zero()}
+    else
+      y_remainder = FQ12.sub(y2, y1)
+      x_remainder = FQ12.sub(x2, x1)
+      lambda = FQ12.divide(y_remainder, x_remainder)
+
+      x =
+        lambda
+        |> FQ12.pow(2)
+        |> FQ12.sub(x1)
+        |> FQ12.sub(x2)
+
+      y =
+        x1
+        |> FQ12.sub(x)
+        |> FQ12.mult(lambda)
+        |> FQ12.sub(y1)
 
       {x, y}
     end
