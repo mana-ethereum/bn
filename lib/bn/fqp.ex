@@ -173,6 +173,13 @@ defmodule BN.FQP do
     end)
   end
 
+  @spec negate(t()) :: t()
+  def negate(fqp) do
+    neg_coef = Enum.map(fqp.coef, fn coef -> -coef end)
+
+    %{fqp | coef: neg_coef}
+  end
+
   defp calculate_inverse({high, low}, {hm, lm}, fqp, deg_low) when deg_low != 0 do
     r = poly_rounded_div(high, low)
     r = r ++ List.duplicate(FQ.new(0), fqp.dim + 1 - Enum.count(r))
