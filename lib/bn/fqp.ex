@@ -120,7 +120,7 @@ defmodule BN.FQP do
 
   def mult(_, _), do: raise(ArgumentError, message: "Can't multiply elements of different fields")
 
-  def div(fqp1, fqp2) do
+  def divide(fqp1, fqp2) do
     inverse = inverse(fqp2)
 
     mult(fqp1, inverse)
@@ -135,6 +135,32 @@ defmodule BN.FQP do
     deg_low = deg(low)
 
     calculate_inverse({high, low}, {hm, lm}, fqp, deg_low)
+  end
+
+  def pow(base, exp) do
+    cond do
+      exp == 0 ->
+        coef = [1] ++ List.duplicate([0], base.dim - 1)
+        new(coef, base.modulus_coef)
+
+      exp == 1 ->
+        base
+
+      rem(exp, 2) == 0 ->
+        base
+        |> mult(base)
+        |> pow(div(exp, 2))
+
+      true ->
+        base
+        |> mult(base)
+        |> pow(div(exp, 2))
+        |> mult(base)
+    end
+  end
+
+  def one do
+    @one
   end
 
   defp calculate_inverse({high, low}, {hm, lm}, fqp, deg_low) when deg_low != 0 do
