@@ -1,8 +1,9 @@
 defmodule BN.Pairing do
-  alias BN.FQ12
+  alias BN.{FQ12, FQP, FQ}
 
   @twist_point FQ12.new([0, 1] ++ List.duplicate(0, 10))
 
+  @spec twist(FQP.t()) :: FQP.t()
   def twist({x, y}) do
     x_1 = x.coef |> Enum.at(0)
     x_2 = x.coef |> Enum.at(1)
@@ -23,5 +24,13 @@ defmodule BN.Pairing do
     new_y = @twist_point |> FQ12.pow(3) |> FQ12.mult(inter_y)
 
     {new_x, new_y}
+  end
+
+  @spec point_to_fq12({FQ.t(), FQ.t()}) :: FQP.t()
+  def point_to_fq12({x, y}) do
+    new_x = [x.value] ++ List.duplicate(0, 11)
+    new_y = [y.value] ++ List.duplicate(0, 11)
+
+    {FQ12.new(new_x), FQ12.new(new_y)}
   end
 end
