@@ -3,6 +3,12 @@ defmodule BN.FQP do
 
   alias BN.FQ
 
+  @type t :: %__MODULE__{
+          coef: [FQ.t()],
+          modulus_coef: [integer()]
+        }
+
+  @spec new([integer()], [integer()], keyword()) :: t()
   def new(coef, modulus_coef, params \\ []) do
     modulus = params[:modulus] || FQ.default_modulus()
     coef_size = Enum.count(coef)
@@ -19,11 +25,6 @@ defmodule BN.FQP do
         FQ.new(coef_el, modulus: modulus)
       end)
 
-    mudulus_coef =
-      Enum.map(modulus_coef, fn coef_el ->
-        FQ.new(coef_el, modulus: modulus)
-      end)
-
     %__MODULE__{
       coef: fq_coef,
       modulus_coef: modulus_coef,
@@ -31,6 +32,7 @@ defmodule BN.FQP do
     }
   end
 
+  @spec add(t(), t()) :: t()
   def add(
         fqp1 = %__MODULE__{dim: dim1, modulus_coef: modulus_coef1},
         fqp2 = %__MODULE__{dim: dim2, modulus_coef: modulus_coef2}
@@ -48,6 +50,7 @@ defmodule BN.FQP do
 
   def add(_, _), do: raise(ArgumentError, message: "Can't add elements of different fields")
 
+  @spec sub(t(), t()) :: t()
   def sub(
         fqp1 = %__MODULE__{dim: dim1, modulus_coef: modulus_coef1},
         fqp2 = %__MODULE__{dim: dim2, modulus_coef: modulus_coef2}
@@ -65,6 +68,7 @@ defmodule BN.FQP do
 
   def sub(_, _), do: raise(ArgumentError, message: "Can't substact elements of different fields")
 
+  @spec mult(t(), t() | FQ.t() | integer()) :: t()
   def mult(
         fqp = %__MODULE__{dim: dim, modulus_coef: modulus_coef},
         fq = %FQ{}
@@ -120,12 +124,14 @@ defmodule BN.FQP do
 
   def mult(_, _), do: raise(ArgumentError, message: "Can't multiply elements of different fields")
 
+  @spec divide(t(), t()) :: t()
   def divide(fqp1, fqp2) do
     inverse = inverse(fqp2)
 
     mult(fqp1, inverse)
   end
 
+  @spec inverse(t()) :: t()
   def inverse(fqp) do
     lm = [FQ.new(1)] ++ List.duplicate(FQ.new(0), fqp.dim)
     hm = List.duplicate(FQ.new(0), fqp.dim + 1)
@@ -137,6 +143,7 @@ defmodule BN.FQP do
     calculate_inverse({high, low}, {hm, lm}, fqp, deg_low)
   end
 
+  @spec pow(t(), integer()) :: t()
   def pow(base, exp) do
     cond do
       exp == 0 ->
@@ -157,10 +164,6 @@ defmodule BN.FQP do
         |> pow(div(exp, 2))
         |> mult(base)
     end
-  end
-
-  def one do
-    @one
   end
 
   defp calculate_inverse({high, low}, {hm, lm}, fqp, deg_low) when deg_low != 0 do
