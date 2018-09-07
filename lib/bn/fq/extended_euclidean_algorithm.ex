@@ -1,4 +1,4 @@
-defmodule BN.IntegerModP.ExtendedEuclideanAlgorithm do
+defmodule BN.FQ.ExtendedEuclideanAlgorithm do
   @spec common_greatest_divisor(integer(), integer()) :: integer()
   def common_greatest_divisor(number1, number2) do
     if number1 >= number2, do: gcd(number1, number2), else: gcd(number2, number1)

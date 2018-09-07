@@ -8,7 +8,7 @@ defmodule BN.FQ do
 
   @default_modulus 21_888_242_871_839_275_222_246_405_745_257_275_088_696_311_157_297_823_662_689_037_894_645_226_208_583
 
-  alias BN.IntegerModP.ExtendedEuclideanAlgorithm
+  alias BN.FQ.ExtendedEuclideanAlgorithm
 
   @spec new(integer() | t(), keyword()) :: t()
   def new(number = %__MODULE__{}, _), do: number
