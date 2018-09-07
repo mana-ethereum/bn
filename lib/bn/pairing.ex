@@ -33,4 +33,32 @@ defmodule BN.Pairing do
 
     {FQ12.new(new_x), FQ12.new(new_y)}
   end
+
+  @spec linefunc({FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}) :: FQP.t()
+  def linefunc({x1, y1}, {x2, y2}, {xt, yt}) do
+    cond do
+      x1 != x2 ->
+        dividend = FQ12.sub(y2, y1)
+        separator = FQ12.sub(x2, x1)
+        quotient = FQ12.divide(dividend, separator)
+
+        xt
+        |> FQ12.sub(x1)
+        |> FQ12.mult(quotient)
+        |> FQ12.sub(FQ12.sub(yt, y1))
+
+      y1 == y2 ->
+        dividend = x1 |> FQ12.pow(2) |> FQ12.mult(3)
+        separator = FQ12.mult(y1, 2)
+        quotient = FQ12.divide(dividend, separator)
+
+        xt
+        |> FQ12.sub(x1)
+        |> FQ12.mult(quotient)
+        |> FQ12.sub(FQ12.sub(yt, y1))
+
+      true ->
+        FQ12.sub(xt, x1)
+    end
+  end
 end
