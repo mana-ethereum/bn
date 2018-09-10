@@ -70,8 +70,12 @@ defmodule BN.BN128Arithmetic do
     cond do
       scalar == 0 ->
         case point do
-          %FQ{} -> {FQ.new(0), FQ.new(0)}
-          _ -> {FQ12.zero(), FQ12.zero()}
+          {%FQ{}, %FQ{}} ->
+            {FQ.new(0), FQ.new(0)}
+
+          _ ->
+            IO.inspect(point)
+            {FQ12.zero(), FQ12.zero()}
         end
 
       scalar == 1 ->
