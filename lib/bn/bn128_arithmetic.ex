@@ -74,7 +74,6 @@ defmodule BN.BN128Arithmetic do
             {FQ.new(0), FQ.new(0)}
 
           _ ->
-            IO.inspect(point)
             {FQ12.zero(), FQ12.zero()}
         end
 

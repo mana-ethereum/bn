@@ -4,7 +4,7 @@ defmodule Bn.MixProject do
   def project do
     [
       app: :bn,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.7",
       description: "BN128 elliptic curve operations for Elixir",
       package: [
