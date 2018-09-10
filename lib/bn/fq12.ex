@@ -13,7 +13,7 @@ defmodule BN.FQ12 do
 
   @spec one() :: FQP.t()
   def one do
-    coef = [1] ++ List.duplicate(0, 12)
+    coef = [1] ++ List.duplicate(0, 11)
 
     new(coef)
   end

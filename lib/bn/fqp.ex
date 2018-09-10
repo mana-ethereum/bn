@@ -175,7 +175,7 @@ defmodule BN.FQP do
 
   @spec negate(t()) :: t()
   def negate(fqp) do
-    neg_coef = Enum.map(fqp.coef, fn coef -> -coef end)
+    neg_coef = Enum.map(fqp.coef, fn coef -> FQ.new(-coef.value) end)
 
     %{fqp | coef: neg_coef}
   end
