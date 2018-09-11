@@ -3,7 +3,7 @@ defmodule BN.FQ2 do
 
   @modulus_coef [1, 0]
 
-  @spec new([integer()]) :: FQP.t()
+  @spec new([integer()]) :: FQP.t() | no_return
   def new(coef) do
     if Enum.count(coef) != 2, do: raise(ArgumentError, message: "FQ2 should have dimension of 2")
 

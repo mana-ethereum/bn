@@ -36,7 +36,7 @@ defmodule BN.FQ do
     new(0)
   end
 
-  @spec add(t(), t()) :: t()
+  @spec add(t(), t()) :: t() | no_return
   def add(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
       when modulus1 != modulus2 do
     raise(ArgumentError, message: "Numbers calculated with different modulus")
@@ -50,7 +50,7 @@ defmodule BN.FQ do
     raise ArgumentError, message: "#{__MODULE__}.add/2 can only add #{__MODULE__} structs"
   end
 
-  @spec sub(t(), t()) :: t()
+  @spec sub(t(), t()) :: t() | no_return
   def sub(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
       when modulus1 != modulus2 do
     raise(ArgumentError, message: "Numbers calculated with different modulus")
@@ -64,7 +64,7 @@ defmodule BN.FQ do
     raise ArgumentError, message: "#{__MODULE__}.sub/2 can only substract #{__MODULE__} structs"
   end
 
-  @spec mult(t(), t() | integer()) :: t()
+  @spec mult(t(), t() | integer()) :: t() | no_return
   def mult(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
       when modulus1 != modulus2 do
     raise(ArgumentError, message: "Numbers calculated with different modulus")
@@ -83,7 +83,7 @@ defmodule BN.FQ do
       message: "#{__MODULE__}.sub/2 can only multiplicate #{__MODULE__} structs"
   end
 
-  @spec divide(t(), t()) :: t()
+  @spec divide(t(), t()) :: t() | no_return
   def divide(%__MODULE__{modulus: modulus1}, %__MODULE__{modulus: modulus2})
       when modulus1 != modulus2 do
     raise(ArgumentError, message: "Numbers calculated with different modulus")
@@ -112,7 +112,7 @@ defmodule BN.FQ do
       message: "#{__MODULE__}.div/2 can only divide #{__MODULE__} structs"
   end
 
-  @spec pow(t(), integer()) :: t()
+  @spec pow(t(), integer()) :: t() | no_return
   def pow(base = %__MODULE__{}, exponent) do
     case exponent do
       0 ->

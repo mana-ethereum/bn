@@ -6,12 +6,12 @@ defmodule BN.BN128Arithmetic do
   @y_power 2
   @x_power 3
   @b FQ.new(3)
-  @b2 [3, 0] |> FQ2.new() |> FQ2.divide(FQ2.new([9, 1]))
+  @b2 FQ2.divide(FQ2.new([3, 0]), FQ2.new([9, 1]))
   @b12 FQ12.new([3] ++ List.duplicate(0, 11))
 
   @type point :: {FQP.t(), FQP.t()} | {FQ.t(), FQ.t()}
 
-  @spec on_curve?(point()) :: boolean()
+  @spec on_curve?(point()) :: boolean() | no_return
   def on_curve?(point = {x, y} = {%FQ{}, %FQ{}}) do
     if infinity?(point) do
       true

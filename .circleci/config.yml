@@ -4,6 +4,8 @@ jobs:
     working_directory: ~/bn
     docker:
       - image: elixir:latest
+        environment:
+          MIX_ENV: test
     steps:
       - checkout
 

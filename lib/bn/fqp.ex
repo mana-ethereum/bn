@@ -8,7 +8,7 @@ defmodule BN.FQP do
           modulus_coef: [integer()]
         }
 
-  @spec new([integer()], [integer()], keyword()) :: t()
+  @spec new([integer()], [integer()], keyword()) :: t() | no_return
   def new(coef, modulus_coef, params \\ []) do
     modulus = Keyword.get(params, :modulus, FQ.default_modulus())
     coef_size = Enum.count(coef)
