@@ -10,7 +10,7 @@ by adding `bn` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:bn, "~> 0.2.0"}
+    {:bn, "~> 0.2.1"}
   ]
 end
 ```

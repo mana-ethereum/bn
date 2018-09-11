@@ -16,7 +16,7 @@ defmodule BN.FQ do
   def new(number = %__MODULE__{}, _), do: number
 
   def new(number, params) do
-    modulus = params[:modulus] || @default_modulus
+    modulus = Keyword.get(params, :modulus, @default_modulus)
 
     value =
       number
@@ -112,7 +112,7 @@ defmodule BN.FQ do
       message: "#{__MODULE__}.div/2 can only divide #{__MODULE__} structs"
   end
 
-  @spec pow(t(), t()) :: t()
+  @spec pow(t(), integer()) :: t()
   def pow(base = %__MODULE__{}, exponent) do
     case exponent do
       0 ->

@@ -10,7 +10,7 @@ defmodule BN.FQP do
 
   @spec new([integer()], [integer()], keyword()) :: t()
   def new(coef, modulus_coef, params \\ []) do
-    modulus = params[:modulus] || FQ.default_modulus()
+    modulus = Keyword.get(params, :modulus, FQ.default_modulus())
     coef_size = Enum.count(coef)
     modulus_coef_size = Enum.count(modulus_coef)
 
@@ -166,7 +166,7 @@ defmodule BN.FQP do
     end
   end
 
-  @spec zero?(t()) :: t()
+  @spec zero?(t()) :: boolean()
   def zero?(fqp) do
     Enum.all?(fqp.coef, fn cur_coef ->
       cur_coef.value == 0
@@ -180,7 +180,18 @@ defmodule BN.FQP do
     %{fqp | coef: neg_coef}
   end
 
-  defp calculate_inverse({high, low}, {hm, lm}, fqp, deg_low) when deg_low != 0 do
+  defp calculate_inverse({_, low}, {_, lm}, fqp, deg_low) when deg_low == 0 do
+    coef =
+      lm
+      |> Enum.take(fqp.dim)
+      |> Enum.map(fn el ->
+        FQ.divide(el, Enum.at(low, 0))
+      end)
+
+    new(coef, fqp.modulus_coef)
+  end
+
+  defp calculate_inverse({high, low}, {hm, lm}, fqp, _deg_low) do
     r = poly_rounded_div(high, low)
     r = r ++ List.duplicate(FQ.new(0), fqp.dim + 1 - Enum.count(r))
 
@@ -208,17 +219,6 @@ defmodule BN.FQP do
     deg_low = deg(new)
 
     calculate_inverse({low, new}, {lm, nm}, fqp, deg_low)
-  end
-
-  defp calculate_inverse({_, low}, {_, lm}, fqp, _) do
-    coef =
-      lm
-      |> Enum.take(fqp.dim)
-      |> Enum.map(fn el ->
-        FQ.divide(el, Enum.at(low, 0))
-      end)
-
-    new(coef, fqp.modulus_coef)
   end
 
   defp poly_rounded_div(a, b) do

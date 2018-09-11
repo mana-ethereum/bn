@@ -4,7 +4,7 @@ defmodule Bn.MixProject do
   def project do
     [
       app: :bn,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.7",
       description: "BN128 elliptic curve operations for Elixir",
       package: [
@@ -26,7 +26,8 @@ defmodule Bn.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false}
+      {:credo, "~> 0.10.0", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 end
