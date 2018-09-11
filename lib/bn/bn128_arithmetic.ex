@@ -1,34 +1,54 @@
 defmodule BN.BN128Arithmetic do
   require Integer
-  alias BN.IntegerModP
-  alias BN.IntegerModP.Point
+  alias BN.{FQ, FQP, FQ2, FQ12}
 
   # y^2 = x^3 + 3
   @y_power 2
   @x_power 3
-  @default_b IntegerModP.new(3)
+  @b FQ.new(3)
+  @b2 FQ2.divide(FQ2.new([3, 0]), FQ2.new([9, 1]))
+  @b12 FQ12.new([3] ++ List.duplicate(0, 11))
 
-  @spec on_curve?(Point.t(), IntegerModP.t()) :: boolean()
-  def on_curve?(point, b \\ @default_b) do
+  @type point :: {FQP.t(), FQP.t()} | {FQ.t(), FQ.t()}
+
+  @spec on_curve?(point()) :: boolean() | no_return
+  def on_curve?(point = {x, y} = {%FQ{}, %FQ{}}) do
     if infinity?(point) do
       true
     else
-      minuend = IntegerModP.pow(point.y, @y_power)
-      subtrahend = IntegerModP.pow(point.x, @x_power)
+      minuend = FQ.pow(y, @y_power)
+      substrahend = FQ.pow(x, @x_power)
 
-      remainder = IntegerModP.sub(minuend, subtrahend)
+      remainder = FQ.sub(minuend, substrahend)
 
-      remainder == b
+      remainder == @b
     end
   end
 
-  @spec add(Point.t(), Point.t(), integer()) :: {:ok, Point.t()} | {:error, String.t()}
-  def add(point1, point2, b \\ @default_b) do
+  def on_curve?(point = {x, y} = {%FQP{}, %FQP{}}) do
+    if infinity?(point) do
+      true
+    else
+      minuend = FQP.pow(y, @y_power)
+      substrahend = FQP.pow(x, @x_power)
+
+      remainder = FQP.sub(minuend, substrahend)
+
+      if x.dim == 2 do
+        remainder == @b2
+      else
+        remainder == @b12
+      end
+    end
+  end
+
+  @spec add(point(), point()) :: {:ok, point()} | {:error, String.t()}
+  def add(point1, point2) do
     cond do
-      !on_curve?(point1, b) ->
+      !on_curve?(point1) ->
         {:error, "point1 is not on the curve"}
 
-      !on_curve?(point2, b) ->
+      !on_curve?(point2) ->
         {:error, "point2 is not on the curve"}
 
       true ->
@@ -36,22 +56,26 @@ defmodule BN.BN128Arithmetic do
     end
   end
 
-  @spec mult(Point.t(), integer(), integer()) :: {:ok, Point.t()} | {:error, String.t()}
-  def mult(point, scalar, b \\ @default_b) do
-    if on_curve?(point, b) do
+  @spec mult(point(), integer()) :: {:ok, point()} | {:error, String.t()}
+  def mult(point, scalar) do
+    if on_curve?(point) do
       {:ok, mult_point(point, scalar)}
     else
       {:error, "point is not on the curve"}
     end
   end
 
-  @spec mult_point(Point.t(), integer()) :: Point.t()
+  @spec mult_point(point(), integer()) :: point()
   defp mult_point(point, scalar) do
     cond do
       scalar == 0 ->
-        {:ok, result} = Point.new(0, 0, modulus: point.modulus)
+        case point do
+          {%FQ{}, %FQ{}} ->
+            {FQ.new(0), FQ.new(0)}
 
-        result
+          _ ->
+            {FQ12.zero(), FQ12.zero()}
+        end
 
       scalar == 1 ->
         point
@@ -69,8 +93,8 @@ defmodule BN.BN128Arithmetic do
     end
   end
 
-  @spec add_points(Point.t(), Point.t()) :: Point.t()
-  defp add_points(point1, point2) do
+  @spec add_points(point(), point()) :: point()
+  def add_points(point1, point2) do
     cond do
       point1 == point2 ->
         double(point1)
@@ -86,72 +110,113 @@ defmodule BN.BN128Arithmetic do
     end
   end
 
-  @spec double(Point.t()) :: Point.t()
-  defp double(point) do
-    if point.y.value == 0 do
-      {:ok, result} = Point.new(0, 0, modulus: point.modulus)
-
-      result
+  @spec double(point()) :: point()
+  def double({x, y} = {%FQ{}, %FQ{}}) do
+    if y.value == 0 do
+      {FQ.new(0), FQ.new(0)}
     else
-      double_y = IntegerModP.mult(point.y, 2)
+      double_y = FQ.mult(y, 2)
 
       lambda =
-        point.x
-        |> IntegerModP.pow(2)
-        |> IntegerModP.mult(3)
-        |> IntegerModP.div(double_y)
+        x
+        |> FQ.pow(2)
+        |> FQ.mult(3)
+        |> FQ.divide(double_y)
 
-      double_x = IntegerModP.mult(point.x, 2)
+      double_x = FQ.mult(x, 2)
 
-      x = lambda |> IntegerModP.pow(2) |> IntegerModP.sub(double_x)
+      new_x = lambda |> FQ.pow(2) |> FQ.sub(double_x)
 
-      y =
-        point.x
-        |> IntegerModP.sub(x)
-        |> IntegerModP.mult(lambda)
-        |> IntegerModP.sub(point.y)
+      new_y =
+        x
+        |> FQ.sub(new_x)
+        |> FQ.mult(lambda)
+        |> FQ.sub(y)
 
-      %Point{
-        x: x,
-        y: y,
-        modulus: point.modulus
-      }
+      {new_x, new_y}
     end
   end
 
-  @spec calculate_points_addition(Point.t(), Point.t()) :: Point.t()
-  defp calculate_points_addition(point1, point2) do
-    if point1.x == point2.x do
-      {:ok, result} = Point.new(0, 0, modulus: point1.modulus)
-
-      result
+  def double({x, y} = {%FQP{}, %FQP{}}) do
+    if y == FQ12.zero() do
+      {FQ12.zero(), FQ12.zero()}
     else
-      y_remainder = IntegerModP.sub(point2.y, point1.y)
-      x_remainder = IntegerModP.sub(point2.x, point1.x)
-      lambda = IntegerModP.div(y_remainder, x_remainder)
+      double_y = FQ12.mult(y, 2)
+
+      lambda =
+        x
+        |> FQ12.pow(2)
+        |> FQ12.mult(3)
+        |> FQ12.divide(double_y)
+
+      double_x = FQ12.mult(x, 2)
+
+      new_x = lambda |> FQ12.pow(2) |> FQ12.sub(double_x)
+
+      new_y =
+        x
+        |> FQ12.sub(new_x)
+        |> FQ12.mult(lambda)
+        |> FQ12.sub(y)
+
+      {new_x, new_y}
+    end
+  end
+
+  @spec calculate_points_addition(point(), point()) :: point()
+  defp calculate_points_addition({x1, y1} = {%FQ{}, %FQ{}}, {x2, y2}) do
+    if x1 == x2 do
+      {FQ.new(0), FQ.new(0)}
+    else
+      y_remainder = FQ.sub(y2, y1)
+      x_remainder = FQ.sub(x2, x1)
+      lambda = FQ.divide(y_remainder, x_remainder)
 
       x =
         lambda
-        |> IntegerModP.pow(2)
-        |> IntegerModP.sub(point1.x)
-        |> IntegerModP.sub(point2.x)
+        |> FQ.pow(2)
+        |> FQ.sub(x1)
+        |> FQ.sub(x2)
 
       y =
-        point1.x
-        |> IntegerModP.sub(x)
-        |> IntegerModP.mult(lambda)
-        |> IntegerModP.sub(point1.y)
+        x1
+        |> FQ.sub(x)
+        |> FQ.mult(lambda)
+        |> FQ.sub(y1)
 
-      %Point{
-        x: x,
-        y: y,
-        modulus: point1.modulus
-      }
+      {x, y}
     end
   end
 
-  @spec infinity?(Point.t()) :: boolean()
-  def infinity?(point) do
-    point.x.value == 0 && point.y.value == 0
+  defp calculate_points_addition({x1, y1} = {%FQP{}, %FQP{}}, {x2, y2}) do
+    if x1 == x2 do
+      {FQ12.zero(), FQ12.zero()}
+    else
+      y_remainder = FQ12.sub(y2, y1)
+      x_remainder = FQ12.sub(x2, x1)
+      lambda = FQ12.divide(y_remainder, x_remainder)
+
+      x =
+        lambda
+        |> FQ12.pow(2)
+        |> FQ12.sub(x1)
+        |> FQ12.sub(x2)
+
+      y =
+        x1
+        |> FQ12.sub(x)
+        |> FQ12.mult(lambda)
+        |> FQ12.sub(y1)
+
+      {x, y}
+    end
+  end
+
+  def infinity?({x, y} = {%FQ{}, %FQ{}}) do
+    x.value == 0 && y.value == 0
+  end
+
+  def infinity?({x, y} = {%FQP{}, %FQP{}}) do
+    FQP.zero?(x) && FQP.zero?(y)
   end
 end

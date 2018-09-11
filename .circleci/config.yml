@@ -4,6 +4,8 @@ jobs:
     working_directory: ~/bn
     docker:
       - image: elixir:latest
+        environment:
+          MIX_ENV: test
     steps:
       - checkout
 
@@ -19,7 +21,6 @@ jobs:
 
       - run: mix credo
       - run: mix format --check-formatted
-
       - run: mix test
 
       - save_cache:
@@ -28,3 +29,43 @@ jobs:
             - _build
             - deps
             - ~/.mix
+
+      - restore_cache:
+          keys:
+            - v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
+            - v1-plt-cache-{{ arch }}-{{ checksum "mix.exs" }}
+            - v1-plt-cache-{{ arch }}
+
+      - run:
+          name: Unpack PLT cache
+          command: |
+            mkdir -p _build/test
+            cp plts/dialyxir*.plt _build/test/ || true
+            mkdir -p ~/.mix
+            cp plts/dialyxir*.plt ~/.mix/ || true
+
+      - run: mix dialyzer --plt
+
+      - run:
+          name: Pack PLT cache
+          command: |
+            mkdir -p plts
+            cp _build/test/dialyxir*.plt plts/
+            cp ~/.mix/dialyxir*.plt plts/
+
+      - save_cache:
+          key: v1-plt-cache-{{ arch }}-{{ checksum "mix.lock" }}
+          paths:
+            - plts
+
+      - save_cache:
+          key: v1-plt-cache-{{ arch }}-{{ checksum "mix.exs" }}
+          paths:
+            - plts
+
+      - save_cache:
+          key: v1-plt-cache-{{ arch }}
+          paths:
+            - plts
+
+      - run: mix dialyzer --halt-exit-status

@@ -1,7 +1,7 @@
-defmodule BN.IntegerModP.ExtendedEuclideanAlgorithmTest do
+defmodule BN.FQ.ExtendedEuclideanAlgorithmTest do
   use ExUnit.Case, async: true
 
-  alias BN.IntegerModP.ExtendedEuclideanAlgorithm
+  alias BN.FQ.ExtendedEuclideanAlgorithm
 
   describe "common_greatest_divisor/2" do
     test "calculates gcd when it's bigger than 1" do
