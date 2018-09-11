@@ -32,7 +32,7 @@ defmodule BN.FQP do
     }
   end
 
-  @spec add(t(), t()) :: t()
+  @spec add(t(), t()) :: t() | no_return
   def add(
         fqp1 = %__MODULE__{dim: dim1, modulus_coef: modulus_coef1},
         fqp2 = %__MODULE__{dim: dim2, modulus_coef: modulus_coef2}
@@ -50,7 +50,7 @@ defmodule BN.FQP do
 
   def add(_, _), do: raise(ArgumentError, message: "Can't add elements of different fields")
 
-  @spec sub(t(), t()) :: t()
+  @spec sub(t(), t()) :: t() | no_return
   def sub(
         fqp1 = %__MODULE__{dim: dim1, modulus_coef: modulus_coef1},
         fqp2 = %__MODULE__{dim: dim2, modulus_coef: modulus_coef2}
@@ -68,7 +68,7 @@ defmodule BN.FQP do
 
   def sub(_, _), do: raise(ArgumentError, message: "Can't substact elements of different fields")
 
-  @spec mult(t(), t() | FQ.t() | integer()) :: t()
+  @spec mult(t(), t() | FQ.t() | integer()) :: t() | no_return
   def mult(
         fqp = %__MODULE__{dim: dim, modulus_coef: modulus_coef},
         fq = %FQ{}
@@ -124,14 +124,14 @@ defmodule BN.FQP do
 
   def mult(_, _), do: raise(ArgumentError, message: "Can't multiply elements of different fields")
 
-  @spec divide(t(), t()) :: t()
+  @spec divide(t(), t()) :: t() | no_return
   def divide(fqp1, fqp2) do
     inverse = inverse(fqp2)
 
     mult(fqp1, inverse)
   end
 
-  @spec inverse(t()) :: t()
+  @spec inverse(t()) :: t() | no_return
   def inverse(fqp) do
     lm = [FQ.new(1)] ++ List.duplicate(FQ.new(0), fqp.dim)
     hm = List.duplicate(FQ.new(0), fqp.dim + 1)
@@ -143,7 +143,7 @@ defmodule BN.FQP do
     calculate_inverse({high, low}, {hm, lm}, fqp, deg_low)
   end
 
-  @spec pow(t(), integer()) :: t()
+  @spec pow(t(), integer()) :: t() | no_return
   def pow(base, exp) do
     cond do
       exp == 0 ->

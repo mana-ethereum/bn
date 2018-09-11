@@ -7,7 +7,7 @@ defmodule BN.Pairing do
 
   @dialyzer {:no_return, pairing: 2, twist: 1}
 
-  @spec pairing({FQP.t(), FQP.t()}, {FQ.t(), FQ.t()}) :: FQP.t()
+  @spec pairing({FQP.t(), FQP.t()}, {FQ.t(), FQ.t()}) :: FQP.t() | no_return
   def pairing(point1, point2) do
     point1_fq12 = twist(point1)
     point2_fq12 = point_to_fq12(point2)
@@ -15,7 +15,7 @@ defmodule BN.Pairing do
     miller_loop(point1_fq12, point2_fq12)
   end
 
-  @spec twist({FQP.t(), FQP.t()}) :: {FQP.t(), FQP.t()}
+  @spec twist({FQP.t(), FQP.t()}) :: {FQP.t(), FQP.t()} | no_return
   def twist({x, y}) do
     x_1 = x.coef |> Enum.at(0)
     x_2 = x.coef |> Enum.at(1)
@@ -38,7 +38,7 @@ defmodule BN.Pairing do
     {new_x, new_y}
   end
 
-  @spec point_to_fq12({FQ.t(), FQ.t()}) :: {FQP.t(), FQP.t()}
+  @spec point_to_fq12({FQ.t(), FQ.t()}) :: {FQP.t(), FQP.t()} | no_return
   def point_to_fq12({x, y}) do
     new_x = [x.value] ++ List.duplicate(0, 11)
     new_y = [y.value] ++ List.duplicate(0, 11)
@@ -46,7 +46,8 @@ defmodule BN.Pairing do
     {FQ12.new(new_x), FQ12.new(new_y)}
   end
 
-  @spec linefunc({FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}) :: FQP.t()
+  @spec linefunc({FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}) ::
+          FQP.t() | no_return
   def linefunc({x1, y1}, {x2, y2}, {xt, yt}) do
     cond do
       x1 != x2 ->
@@ -74,7 +75,7 @@ defmodule BN.Pairing do
     end
   end
 
-  @spec miller_loop({FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}) :: FQP.t()
+  @spec miller_loop({FQP.t(), FQP.t()}, {FQP.t(), FQP.t()}) :: FQP.t() | no_return
   def miller_loop(point1 = {x1, y1}, point2) do
     one = FQ12.one()
 
