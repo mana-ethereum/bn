@@ -1,4 +1,4 @@
-# BN [![CircleCI](https://circleci.com/gh/poanetwork/bn.svg?style=svg)](https://circleci.com/gh/poanetwork/bn)
+# BN [![CircleCI](https://circleci.com/gh/mana-ethereum/bn.svg?style=svg)](https://circleci.com/gh/mana-ethereum/bn)
 
 BN128 elliptic curve operations for Elixir
 
@@ -10,7 +10,7 @@ by adding `bn` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:bn, "~> 0.2.1"}
+    {:bn, "~> 0.2.2"}
   ]
 end
 ```
